@@ -8,7 +8,7 @@ const { DEFAULT_OPTIONS } = require('./constants');
 const pluginFunctions = {
 
     /** 
-     * Set plugin options variables for functions
+     * Set plugin options properties for functions
      * @param {object} options
     */
     setPluginOptions: function(options) {
@@ -18,7 +18,7 @@ const pluginFunctions = {
     },
 
     /**
-     * Set files variable for functions
+     * Set files property for functions
      * @param {object||Array} files 
      */
     setFiles: function(files) {
@@ -131,7 +131,7 @@ const pluginFunctions = {
             absoluteImgPath += filename;
             const file = this.getImageFile(absoluteImgPath);
             if(file) {
-            return file.absolutePath;
+                return file.absolutePath;
             }
         }
         return null;
@@ -147,7 +147,6 @@ const pluginFunctions = {
 
         // if node.originalSrc is set, use that
         let pathToImage = this.findLocalImg(src);
-        // if remote, getRemoteImg(path)
 
         return pathToImage;
     },

@@ -3,12 +3,12 @@ const sizeOf = require("image-size");
 const path = require('path');
 const { JSDOM } = jsdom;
 const { find } = require('lodash');
-const DEFAULT_OPTIONS = require('../constants');
+const { DEFAULT_OPTIONS } = require('./constants');
 
 const pluginFunctions = {
 
     /** 
-     * Set plugin options for functions
+     * Set plugin options variables for functions
      * @param {object} options
     */
     setPluginOptions: function(options) {
@@ -18,8 +18,8 @@ const pluginFunctions = {
     },
 
     /**
-     * Set files list for functions
-     * @param {Object|Array} files 
+     * Set files variable for functions
+     * @param {object||Array} files 
      */
     setFiles: function(files) {
         this.files = files;
@@ -33,7 +33,6 @@ const pluginFunctions = {
     getPluginOption: function(property) {
         return property in this.pluginOptions ? this.pluginOptions[property] : DEFAULT_OPTIONS[property];
     },
-    
     
     /**
      * Check if node value begins with <img
@@ -95,10 +94,10 @@ const pluginFunctions = {
      * @return {Object || null}
      */
     getImgDimensions: function(dom) {
-        const image = findImagePath(getImgSrc(dom));
+        const image = this.findImagePath(getImgSrc(dom));
         const imgDimensions = sizeOf(image);
         const ratio = imgDimensions['width'] / imgDimensions['height'];
-        const width = Math.min(alignedImageWidth, imgDimensions['width']);
+        const width = Math.min(this.alignedImageWidth, imgDimensions['width']);
         const height = width * (1 / ratio);
         return { width, height };
     },
@@ -121,16 +120,16 @@ const pluginFunctions = {
     /**
      * Check possible locations for the source image file
      * @param {string} src
-     * return {string || null}
+     * @returns {string || null}
      */
     findLocalImg: function(src) {
-        const filename = getFilename(src);
+        const filename = this.getFilename(src);
         const pathOptions = ["./", "/images/", "../images/"];
 
         for (const path of pathOptions) {
             let absoluteImgPath = path.endsWith('/') ? path : path + "/";
             absoluteImgPath += filename;
-            const file = getImageFile(absoluteImgPath);
+            const file = this.getImageFile(absoluteImgPath);
             if(file) {
             return file.absolutePath;
             }
@@ -147,7 +146,7 @@ const pluginFunctions = {
         // try the image src first
 
         // if node.originalSrc is set, use that
-        let pathToImage = findLocalImg(src);
+        let pathToImage = this.findLocalImg(src);
         // if remote, getRemoteImg(path)
 
         return pathToImage;
@@ -167,8 +166,8 @@ const pluginFunctions = {
         // get width and height from attributes
         // if not available, try and get them from
         // the source file
-        let width = attributes.width || getImgDimensions(dom).width;
-        let height = attributes.height || getImgDimensions(dom).height;
+        let width = attributes.width || this.getImgDimensions(dom).width;
+        let height = attributes.height || this.getImgDimensions(dom).height;
         if (width && height) {
             wrapper.style.cssText += `width:${width}px;height:${height}px`;
         }
@@ -182,16 +181,16 @@ const pluginFunctions = {
         let {type, value, position, ...attributes} = node;
         const dom = new JSDOM(value, { contentType: "text/html" });
 
-        let wrapper = getWrapper(dom);
+        let wrapper = this.getWrapper(dom);
         if (wrapper) {
             // set dataset attributes on wrapper
             for (const [key, value] of Object.entries(attributes)) {
-            value && setAttribute(wrapper, key, value);
+                value && this.setAttribute(wrapper, key, value);
             }
 
             // set CSS styles on wrapper
-            if(setCssInWrapper) {
-            setCSS(wrapper, dom, attributes);
+            if(this.setCssInWrapper) {
+                this.setCSS(wrapper, dom, attributes);
             }
 
             // update AST node

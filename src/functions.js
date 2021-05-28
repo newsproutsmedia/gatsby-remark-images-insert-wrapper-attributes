@@ -87,6 +87,15 @@ const pluginFunctions = {
     getFilename: function(file) {
         return path.basename(file);
     },
+
+    /**
+     * Uses image-size package to calculate dimensions
+     * @param {string} image 
+     * @returns {object || undefined}
+     */
+    getSizeOf: function(image) {
+        return sizeOf(image);
+    },
     
     /**
      * Get image dimensions from
@@ -94,26 +103,25 @@ const pluginFunctions = {
      * @return {Object || null}
      */
     getImgDimensions: function(dom) {
-        const image = this.findImagePath(getImgSrc(dom));
-        const imgDimensions = sizeOf(image);
+        const image = this.findLocalImage(this.getImgSrc(dom));
+        if(!image) return null;
+        const imgDimensions = this.getSizeOf(image);
         const ratio = imgDimensions['width'] / imgDimensions['height'];
         const width = Math.min(this.alignedImageWidth, imgDimensions['width']);
-        const height = width * (1 / ratio);
+        const height = Math.round(width * (1 / ratio));
         return { width, height };
     },
     
     /**
-     * Check image against files and return match
+     * Check image filename against files and return match
      * @param {string} imagePath
      * @returns {Object || null}
      */
-    getImageFile: function(imagePath) {
-        return find(files, file => {
-            const fullPath = path.join(file.dir, imagePath);
-            if(file && file.absolutePath) {
-            return file.absolutePath === fullPath;
+     getImageByFilename: function(filename) {
+        return find(this.files, file => {
+            if(file && file.absolutePath && file.base) {
+                return file.base === filename;
             }
-            return null;
         })
     },
     
@@ -122,33 +130,17 @@ const pluginFunctions = {
      * @param {string} src
      * @returns {string || null}
      */
-    findLocalImg: function(src) {
+    findLocalImage: function(src) {
         const filename = this.getFilename(src);
-        const pathOptions = ["./", "/images/", "../images/"];
-
-        for (const path of pathOptions) {
-            let absoluteImgPath = path.endsWith('/') ? path : path + "/";
-            absoluteImgPath += filename;
-            const file = this.getImageFile(absoluteImgPath);
-            if(file) {
-                return file.absolutePath;
-            }
+        console.log("FILENAME: ", filename);
+        const file = this.getImageByFilename(filename);
+        console.log("FILE: ", file);
+        if(file) {
+            console.log(file.absolutePath)
+            return file.absolutePath;
         }
+
         return null;
-    },
-    
-    /**
-     * Attempts to find source file locally
-     * @param {string} src
-     * @returns {string || null}
-     */
-    findImagePath: function(src) {
-        // try the image src first
-
-        // if node.originalSrc is set, use that
-        let pathToImage = this.findLocalImg(src);
-
-        return pathToImage;
     },
 
     /**

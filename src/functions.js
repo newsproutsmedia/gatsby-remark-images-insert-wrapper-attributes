@@ -132,11 +132,8 @@ const pluginFunctions = {
      */
     findLocalImage: function(src) {
         const filename = this.getFilename(src);
-        console.log("FILENAME: ", filename);
         const file = this.getImageByFilename(filename);
-        console.log("FILE: ", file);
         if(file) {
-            console.log(file.absolutePath)
             return file.absolutePath;
         }
 

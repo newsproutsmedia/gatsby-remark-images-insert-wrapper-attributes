@@ -2,7 +2,7 @@ const pluginFunctions = require('../functions');
 const jsdom = require("jsdom");
 const { JSDOM } = jsdom;
 const { DEFAULT_OPTIONS } = require('../constants');
-const { nodeMock, nodeCaptionMock, filesMock } = require('../__mocks__/ast.mocks');
+const { nodeMock, nodeCaptionMock, nodeImageAttributesMock, filesMock } = require('../__mocks__/ast.mocks');
 const { setAttribute } = require('../functions');
 
 describe("Functions Tests", () => {
@@ -136,12 +136,13 @@ describe("Functions Tests", () => {
             expect.objectContaining({width: 300, height: 200 })
         );
         findImagePathSpy.mockRestore();
+        imageSizeSpy.mockRestore();
     });
 
     // getImageByFilename
     it("should return absolute path to image file", () => {
         pluginFunctions.setFiles(filesMock);
-        const filename = "test.jpg"
+        const filename = "test.jpg";
         const file = pluginFunctions.getImageByFilename(filename);
         expect(file).toBeTruthy();
         expect(file.base).toBe("test.jpg");
@@ -160,7 +161,6 @@ describe("Functions Tests", () => {
     it("should return absolute path to local image file", () => {
         pluginFunctions.setFiles(filesMock);
         const source = "/images/test.jpg";
-        console.log('SOURCE: ', source);
         const filePath = pluginFunctions.findLocalImage(source);
         expect(filePath).toBe('/images/test.jpg');
     });
@@ -173,11 +173,28 @@ describe("Functions Tests", () => {
     });
 
     // setCSS
-    it("should set width and height style in wrapper", () => {
+    it("should use ast attribute dimensions to set width and height style in wrapper", () => {
         let {type, value, position, ...attributes} = nodeMock;
         const dom = new JSDOM(value, { contentType: "text/html" });
         const imgWrapper = dom.window.document.getElementsByClassName("gatsby-resp-image-wrapper")[0];
+        const imgDimensionsSpy = jest.spyOn(pluginFunctions, "getImgDimensions");
         pluginFunctions.setCSS(imgWrapper, dom, attributes);
+        expect(imgWrapper.style.width).toBe("600px");
+        expect(imgWrapper.style.height).toBe("400px");
+        expect(imgDimensionsSpy).not.toHaveBeenCalled();
+        imgDimensionsSpy.mockRestore();
+    });
+
+    it("should calculate and set width and height in wrapper if ast attributes aren't set", () => {
+        let {type, value, position, ...attributes} = nodeImageAttributesMock;
+        const dom = new JSDOM(value, { contentType: "text/html" });
+        const imgWrapper = dom.window.document.getElementsByClassName("gatsby-resp-image-wrapper")[0];
+        const imgDimensionsSpy = jest.spyOn(pluginFunctions, "getImgDimensions");
+        pluginFunctions.setCSS(imgWrapper, dom, attributes);
+        expect(imgDimensionsSpy).toHaveBeenCalledTimes(2);
+        expect(imgWrapper.style.width).toBe("600px");
+        expect(imgWrapper.style.height).toBe("400px");
+        imgDimensionsSpy.mockRestore();
     });
 
     // insertWrapperAttributes

@@ -122,7 +122,7 @@ img[src*='align=right'] {
 ## Options 
 
 ### `setCssInWrapper` (default: true)
-You can disable the setting of CSS styles in the wrapper by setting setCSSInWrapper to false:
+You can disable the setting of CSS styles in the wrapper by setting setCSSInWrapper to false. Data attributes will still be set:
 
 ``` 
 // gatsby-config.js
@@ -142,11 +142,35 @@ You can disable the setting of CSS styles in the wrapper by setting setCSSInWrap
       }
 }
 
+// resulting wrapper styles and attributes
+<span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px" data-width="300" data-height="200" data-align="left"> # image source sets</span>
+
 ```
 ### `alignedImageWidth` (default: 300)
-You can use the "alignedImageWidth" option to set a maximum width for images that are left- or right-aligned. The plugin will calculate the correct pixel dimensions and set the CSS width and height accordingly. If this option is set, it can only be overridden by a smaller width setting in the markdownAST property for that image.  
+You can use the "alignedImageWidth" option to set a maximum width for images that are left- or right-aligned:
 
-Example 1:
+``` 
+// gatsby-config.js
+{
+      resolve: `gatsby-transformer-remark`,
+      options: {
+        plugins: [
+          `gatsby-remark-extract-image-attributes`,
+          `gatsby-remark-images`,
+          {
+            resolve: `gatsby-remark-images-insert-wrapper-attributes`,
+            options: {
+              alignedImageWidth: 300
+            }
+          },
+        ]
+      }
+}
+
+```
+ The plugin will calculate the correct pixel dimensions and set the CSS width and height accordingly. If this option is set, it can only be overridden by a smaller width setting in the markdownAST property for that image.
+
+*Example 1:*
 - "alignedImageWidth" is set to 300
 - The width and height that are set in the wrapper will be set to height: 300px, width: 200px
 
@@ -175,7 +199,7 @@ Example 1:
 
 ```
 
-Example 2:
+*Example 2:*
 - "alignedImageWidth" is set to 300
 - Because the attributes in the AST are below 300, the width and height that are set in the wrapper will be set to height: 150px, width: 100px
 
@@ -203,7 +227,7 @@ Example 2:
 <span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px; width: 150px; height: 100px" data-width="150" data-height="100" data-align="left"> # image source sets</span>
 
 ```
-Example 3:
+*Example 3:*
 - "alignedImageWidth" is set to 1200
 - The width and height that are set in the wrapper will be set to height: 600px, width: 400px
 
@@ -231,7 +255,7 @@ Example 3:
 <span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px; width: 600px; height: 400px" data-width="600" data-height="400" data-align="left"> # image source sets</span>
 
 ```
-Example 4:
+*Example 4:*
 - "alignedImageWidth" is set to 300
 - Width and height attributes are NOT set in the AST
 - The system will calculate width and height based on the dimensions of the image file itself

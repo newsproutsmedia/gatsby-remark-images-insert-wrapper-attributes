@@ -6,15 +6,17 @@ const { find } = require('lodash');
 const { DEFAULT_OPTIONS } = require('./constants');
 
 const pluginFunctions = {
+    errorMessages: {},
 
     /** 
      * Set plugin options properties for functions
      * @param {object} options
     */
     setPluginOptions: function(options) {
-        this.pluginOptions = options;
+        this.pluginOptions = options.hasOwnProperty("setCssInWrapper") ? options : DEFAULT_OPTIONS;
         this.setCssInWrapper = this.getPluginOption("setCssInWrapper");
         this.alignedImageWidth = this.getPluginOption("alignedImageWidth");
+        return {setCssInWrapper: this.setCssInWrapper, alignedImageWidth: this.alignedImageWidth};
     },
 
     /**
@@ -23,6 +25,7 @@ const pluginFunctions = {
      */
     setFiles: function(files) {
         this.files = files;
+        return this.files;
     },
     
     /**
@@ -76,7 +79,10 @@ const pluginFunctions = {
      */
     getImgSrc: function(dom) {
         const img = dom.window.document.querySelector("img");
-        return img.src;
+        if(img && img.src) {
+            return img.src;
+        }
+        return null;
     },
     
     /**
@@ -84,8 +90,10 @@ const pluginFunctions = {
      * @param {string} file
      * @returns {string}
      */
-    getFilename: function(file) {
-        return path.basename(file);
+    getFilename: function(src) {
+        if(!src) return null;
+        let filename = path.basename(src);
+        return filename;
     },
 
     /**
@@ -104,7 +112,7 @@ const pluginFunctions = {
      */
     getImgDimensions: function(dom) {
         const image = this.findLocalImage(this.getImgSrc(dom));
-        if(!image) return null;
+        if(!image) return {};
         const imgDimensions = this.getSizeOf(image);
         const ratio = imgDimensions['width'] / imgDimensions['height'];
         const width = Math.min(this.alignedImageWidth, imgDimensions['width']);
@@ -118,11 +126,7 @@ const pluginFunctions = {
      * @returns {Object || null}
      */
      getImageByFilename: function(filename) {
-        return find(this.files, file => {
-            if(file && file.absolutePath && file.base) {
-                return file.base === filename;
-            }
-        })
+        return find(this.files, file => file.base === filename)
     },
     
     /**
@@ -131,8 +135,8 @@ const pluginFunctions = {
      * @returns {string || null}
      */
     findLocalImage: function(src) {
-        const filename = this.getFilename(src);
-        const file = this.getImageByFilename(filename);
+        let filename = this.getFilename(src);
+        let file = this.getImageByFilename(filename);
         if(file) {
             return file.absolutePath;
         }
@@ -154,10 +158,14 @@ const pluginFunctions = {
         // get width and height from attributes
         // if not available, try and get them from
         // the source file
-        let width = attributes.width || this.getImgDimensions(dom).width;
-        let height = attributes.height || this.getImgDimensions(dom).height;
+        let imgDimensions = this.getImgDimensions(dom);
+        let width = attributes.width || imgDimensions.width || null;
+        let height = attributes.height || imgDimensions.height || null;
         if (width && height) {
             wrapper.style.cssText += `width:${width}px;height:${height}px`;
+            return {width: wrapper.style.width, height: wrapper.style.height};
+        } else {
+            this.errorMessages.setCSS = "No width or height found";
         }
     },
     
@@ -179,10 +187,14 @@ const pluginFunctions = {
             // set CSS styles on wrapper
             if(this.setCssInWrapper) {
                 this.setCSS(wrapper, dom, attributes);
+            } else {
+                this.errorMessages.setCss = "setCssInWrapper set to false";
             }
 
             // update AST node
             node.value = wrapper.outerHTML;
+        } else {
+            this.errorMessages.wrapper = "No wrapper found";
         }
     }
 

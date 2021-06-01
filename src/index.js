@@ -1,7 +1,7 @@
 const visit = require("unist-util-visit");
 const pluginFunctions = require('./functions');
 
-module.exports = ({ files, markdownAST }, pluginOptions) => {
+const pluginImageAttributeWrapper = ({ files, markdownAST }, pluginOptions) => {
 
   // Set up constants
   pluginFunctions.setFiles(files);
@@ -16,3 +16,5 @@ module.exports = ({ files, markdownAST }, pluginOptions) => {
 
   return markdownAST;
 }
+
+module.exports = pluginImageAttributeWrapper;

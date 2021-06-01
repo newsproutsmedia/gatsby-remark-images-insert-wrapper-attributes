@@ -34,6 +34,257 @@ The gatsby-remark-images plugin should be sandwiched between gatsby-remark-extra
       }
 }
 ```
+
+## Front-End Implementation
+This plugin is (ultimately) intended to be used with the [CSS attr() selector](https://developer.mozilla.org/en-US/docs/Web/CSS/attr()) to size and align images based on the wrapper dataset attributes that are set:
+
+```
+// generated wrapper
+<span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px; width: 300px; height: 200px" data-align="left" data-width="300" data-height="200"> # image source sets</span>
+
+// CSS attr() selectors -- NOT YET FULLY SUPPORTED BY ALL BROWSERS
+  [data-width] {
+      width: attr(data-width px);
+  }
+
+  [data-height] {
+      height: attr(data-height px);
+  }
+
+  [data-align] {
+      float: attr(data-align);
+  }
+
+```
+
+However, since attr() isn't fully implemented yet (as of May 31st, 2021), @media rules can be used to unset wrapper CSS styles to achieve the same result:
+
+```
+// generated wrapper
+<span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px; width: 300px; height: 200px" data-align="left" data-width="300" data-height="200"> # image source sets</span>
+
+// CSS classes to align image on screens larger than 640px
+
+@media only screen and (min-width:641px) {
+
+  [data-align="right"] {
+      float: right;
+      margin: 6px 0 10px 40px !important;
+  }
+
+  [data-align="left"] {
+      float: left;
+      margin: 6px 40px 10px 0 !important;
+  }
+
+  figure[data-align] {
+      margin-bottom: 60px !important;
+  }
+
+// CSS classes to remove width and height on screens below 640px in width
+
+@media only screen and (max-width:640px) {
+
+  .gatsby-resp-image-wrapper {
+      width: unset !important;
+      height: unset !important;
+  }
+
+  .gatsby-resp-image-figure {
+      width: unset !important;
+      height: unset !important;
+  }
+
+}
+
+```
+
+If you're using URL params, you can use the following CSS to set (for example) the alignment ([from css-tricks.com](https://css-tricks.com/almanac/selectors/a/attribute/)):
+
+```
+img[src*='align=left'] {
+  float: left;
+  margin: 6px 40px 10px 0;
+}
+
+img[src*='align=center'] {
+  display: block;
+  margin: 0 auto;
+}
+
+img[src*='align=right'] {
+  float: right;
+  margin: 6px 0 10px 40px;
+}
+
+```
+
+## Options 
+
+### `setCssInWrapper` (default: true)
+You can disable the setting of CSS styles in the wrapper by setting setCSSInWrapper to false. Data attributes will still be set:
+
+``` 
+// gatsby-config.js
+{
+      resolve: `gatsby-transformer-remark`,
+      options: {
+        plugins: [
+          `gatsby-remark-extract-image-attributes`,
+          `gatsby-remark-images`,
+          {
+            resolve: `gatsby-remark-images-insert-wrapper-attributes`,
+            options: {
+              setCssInWrapper: false
+            }
+          },
+        ]
+      }
+}
+
+// resulting wrapper styles and attributes
+<span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px" data-width="300" data-height="200" data-align="left"> # image source sets</span>
+
+```
+### `alignedImageWidth` (default: 300)
+You can use the "alignedImageWidth" option to set a maximum width for images that are left- or right-aligned:
+
+``` 
+// gatsby-config.js
+{
+      resolve: `gatsby-transformer-remark`,
+      options: {
+        plugins: [
+          `gatsby-remark-extract-image-attributes`,
+          `gatsby-remark-images`,
+          {
+            resolve: `gatsby-remark-images-insert-wrapper-attributes`,
+            options: {
+              alignedImageWidth: 300
+            }
+          },
+        ]
+      }
+}
+
+```
+ The plugin will calculate the correct pixel dimensions and set the CSS width and height accordingly. If this option is set, it can only be overridden by a smaller width setting in the markdownAST property for that image.
+
+*Example 1:*
+- "alignedImageWidth" is set to 300
+- The width and height that are set in the wrapper will be set to height: 300px, width: 200px
+
+```
+// markdownAST
+{
+    type: 'root',
+    children: [
+      {
+        type: 'html',
+        value: image HTML data
+        position: [positionData]
+        align: 'left',
+        width: '600',
+        height: '400',
+        caption: null
+        },
+    ],
+    position: {
+        start: { line: 1, column: 1, offset: 0 },
+        end: { line: 93, column: 1, offset: 21282 }
+    }
+
+// resulting wrapper styles and attributes
+<span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px; width: 300px; height: 200px" data-width="300" data-height="200" data-align="left"> # image source sets</span>
+
+```
+
+*Example 2:*
+- "alignedImageWidth" is set to 300
+- Because the attributes in the AST are below 300, the width and height that are set in the wrapper will be set to height: 150px, width: 100px
+
+```
+// markdownAST
+{
+    type: 'root',
+    children: [
+      {
+        type: 'html',
+        value: image HTML data
+        position: [positionData]
+        align: 'left',
+        width: '150',
+        height: '100',
+        caption: null
+        },
+    ],
+    position: {
+        start: { line: 1, column: 1, offset: 0 },
+        end: { line: 93, column: 1, offset: 21282 }
+    }
+
+// resulting wrapper styles and attributes
+<span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px; width: 150px; height: 100px" data-width="150" data-height="100" data-align="left"> # image source sets</span>
+
+```
+*Example 3:*
+- "alignedImageWidth" is set to 1200
+- The width and height that are set in the wrapper will be set to height: 600px, width: 400px
+
+```
+// markdownAST
+{
+    type: 'root',
+    children: [
+      {
+        type: 'html',
+        value: image HTML data
+        position: [positionData]
+        align: 'left',
+        width: '600',
+        height: '400',
+        caption: null
+        },
+    ],
+    position: {
+        start: { line: 1, column: 1, offset: 0 },
+        end: { line: 93, column: 1, offset: 21282 }
+    }
+
+// resulting wrapper styles and attributes
+<span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px; width: 600px; height: 400px" data-width="600" data-height="400" data-align="left"> # image source sets</span>
+
+```
+*Example 4:*
+- "alignedImageWidth" is set to 300
+- Width and height attributes are NOT set in the AST
+- The system will calculate width and height based on the dimensions of the image file itself
+- Let's say that the image file is 600x400 pixels
+- The styles that are set in the wrapper will be set to height: 300px, width: 200px
+
+```
+// markdownAST
+{
+    type: 'root',
+    children: [
+      {
+        type: 'html',
+        value: image HTML data
+        position: [positionData]
+        align: 'left'
+        caption: null
+        },
+    ],
+    position: {
+        start: { line: 1, column: 1, offset: 0 },
+        end: { line: 93, column: 1, offset: 21282 }
+    }
+
+// resulting wrapper styles and attributes
+<span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px; width: 600px; height: 400px" data-width="600" data-height="400" data-align="left"> # image source sets</span>
+
+```
+
 ## Testing
 
 To run Jest tests: 

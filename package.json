@@ -10,7 +10,7 @@
     "build": "babel src --out-dir ./ --source-maps",
     "watch": "babel src --out-dir ./ --source-maps --watch",
     "lint": "eslint --ext js ./ --cache",
-    "test": "jest --color"
+    "test": "jest --color --run-in-band"
   },
   "repository": {
     "type": "git",
@@ -39,7 +39,9 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.14.0",
+    "image-size": "^1.0.0",
     "jsdom": "^16.5.3",
+    "lodash": "^4.17.21",
     "unist-util-visit": "^2.0.3"
   },
   "peerDependencies": {

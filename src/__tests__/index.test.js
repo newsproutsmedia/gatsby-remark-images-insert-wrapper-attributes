@@ -1,4 +1,3 @@
-const { iteratee } = require('lodash');
 const plugin = require('../index');
 const {mockAst, filesMock} = require('../__mocks__/ast.mocks');
 const jsdom = require("jsdom");
@@ -12,7 +11,6 @@ describe("AST visit test", () => {
         files[0].absolutePath = __dirname + "/images/test.jpg";
         const ast = {markdownAST: mockAst, files: files};
         const newAst = plugin(ast, pluginOptions);
-        console.log(newAst);
         const {type, value, position, ...attributes} = newAst.children[0];
         const dom = new JSDOM(value, { contentType: "text/html" });
         const imgWrapper = dom.window.document.getElementsByClassName("gatsby-resp-image-wrapper")[0];

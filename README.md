@@ -290,7 +290,7 @@ You can use the "alignedImageWidth" option to set a maximum width for images tha
     }
 
 // resulting wrapper styles and attributes
-<span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px; width: 600px; height: 400px" data-width="600" data-height="400" data-align="left"> # image source sets</span>
+<span class="gatsby-resp-image-wrapper" style="position: relative; display: block; margin-left: auto; margin-right: auto; max-width: 930px; width: 300px; height: 200px" data-width="300" data-height="200" data-align="left"> # image source sets</span>
 
 ```
 
